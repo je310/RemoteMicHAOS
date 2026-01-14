@@ -1,0 +1,58 @@
+name: USB Mic Stream (Test)
+slug: usb_mic_stream
+description: Pulse -> FFmpeg -> internal MediaMTX -> RTSP (Android/VLC friendly). Heavy debug logging.
+version: "0.4.0"
+arch: [amd64, aarch64, armv7, armhf]
+startup: services
+boot: manual
+init: false
+
+usb: true
+audio: true
+udev: true
+devices:
+  - /dev/snd
+
+ports:
+  8554/tcp: 19554
+ports_description:
+  19554/tcp: RTSP (host 19554 → container 8554), path /usbmic
+
+options:
+  pulse_source: "alsa_input.usb-Jieli_Technology_USB_Composite_Device_433039333836352E-00.mono-fallback"
+  rtsp_path: "usbmic"
+  rtsp_listen_port: 8554
+  rtsp_transport: "tcp"          # tcp strongly recommended for Android stability
+
+  sample_rate: 48000
+  channels: 1
+
+  codec: "opus"                  # opus|aac   (try opus first; if VLC hates it, set aac)
+  bitrate: "64k"                 # opus: 48k-96k typical; aac: 96k-160k typical
+
+  # Smoothness / timestamp stability (helps “gaps” + non-monotonic DTS)
+  enable_smooth_timestamps: true
+  aresample_async_ms: 200         # 100-400ms typical; higher = smoother but slightly more latency
+
+  # Loudness
+  gain_db: 10                     # simple boost (try 6..15)
+  enable_dynaudnorm: false        # set true if levels vary a lot (adds a bit of “processing”)
+
+  ffmpeg_loglevel: info
+  restart_delay_sec: 2
+
+schema:
+  pulse_source: str
+  rtsp_path: str
+  rtsp_listen_port: int(1,65535)
+  rtsp_transport: list(tcp|udp)
+  sample_rate: int(8000,48000)
+  channels: int(1,2)
+  codec: list(opus|aac)
+  bitrate: str
+  enable_smooth_timestamps: bool
+  aresample_async_ms: int(0,2000)
+  gain_db: int(0,30)
+  enable_dynaudnorm: bool
+  ffmpeg_loglevel: list(quiet|panic|fatal|error|warning|info|verbose|debug|trace)
+  restart_delay_sec: int(0,30)

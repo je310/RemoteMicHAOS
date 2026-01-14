@@ -1,0 +1,5 @@
+logLevel: info
+rtspAddress: :28554
+protocols: [tcp]
+paths:
+  live: {}
